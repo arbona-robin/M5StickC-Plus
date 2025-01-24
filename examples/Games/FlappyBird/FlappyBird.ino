@@ -1,8 +1,9 @@
+// Fork adapt to M5StickCPlus2
 // By Ponticelli Domenico.
 // 12NOV2020 EEPROM Working now, Modified by Zontex
 // https://github.com/pcelli85/M5Stack_FlappyBird_game
 
-#include <M5StickCPlus.h>
+#include <M5StickCPlus2.h>
 #include <EEPROM.h>
 
 #define TFTW  135  // screen width
@@ -32,29 +33,29 @@ int address         = 0;
 int maxScore        = EEPROM.readInt(address);
 const int buttonPin = 2;
 // background
-const unsigned int BCKGRDCOL = M5.Lcd.color565(138, 235, 244);
+const unsigned int BCKGRDCOL = StickCP2.Display.color565(138, 235, 244);
 // bird
-const unsigned int BIRDCOL = M5.Lcd.color565(255, 254, 174);
+const unsigned int BIRDCOL = StickCP2.Display.color565(255, 254, 174);
 // pipe
-const unsigned int PIPECOL = M5.Lcd.color565(99, 255, 78);
+const unsigned int PIPECOL = StickCP2.Display.color565(99, 255, 78);
 // pipe highlight
-const unsigned int PIPEHIGHCOL = M5.Lcd.color565(250, 255, 250);
+const unsigned int PIPEHIGHCOL = StickCP2.Display.color565(250, 255, 250);
 // pipe seam
-const unsigned int PIPESEAMCOL = M5.Lcd.color565(0, 0, 0);
+const unsigned int PIPESEAMCOL = StickCP2.Display.color565(0, 0, 0);
 // floor
-const unsigned int FLOORCOL = M5.Lcd.color565(246, 240, 163);
+const unsigned int FLOORCOL = StickCP2.Display.color565(246, 240, 163);
 // grass (col2 is the stripe color)
-const unsigned int GRASSCOL  = M5.Lcd.color565(141, 225, 87);
-const unsigned int GRASSCOL2 = M5.Lcd.color565(156, 239, 88);
+const unsigned int GRASSCOL  = StickCP2.Display.color565(141, 225, 87);
+const unsigned int GRASSCOL2 = StickCP2.Display.color565(156, 239, 88);
 
 // bird sprite
 // bird sprite colors (Cx name for values to keep the array readable)
 #define C0 BCKGRDCOL
-#define C1 M5.Lcd.color565(195, 165, 75)
+#define C1 StickCP2.Display.color565(195, 165, 75)
 #define C2 BIRDCOL
 #define C3 TFT_WHITE
 #define C4 TFT_RED
-#define C5 M5.Lcd.color565(251, 216, 114)
+#define C5 StickCP2.Display.color565(251, 216, 114)
 
 static unsigned int birdcol[] = {
     C0, C0, C1, C1, C1, C1, C1, C0, C0, C0, C1, C1, C1, C1, C1, C0, C0, C1, C2,
@@ -89,8 +90,8 @@ static short tmpx, tmpy;
 // faster drawPixel method by inlining calls and using setAddrWindow and
 // pushColor using macro to force inlining
 #define drawPixel(a, b, c)            \
-    M5.Lcd.setAddrWindow(a, b, a, b); \
-    M5.Lcd.pushColor(c)
+    StickCP2.Display.setAddrWindow(a, b, a, b); \
+    StickCP2.Display.pushColor(c)
 // ---------------
 // game loop
 // ---------------
@@ -104,14 +105,14 @@ void game_loop() {
     unsigned char GAMEH = TFTH - FLOORH;
     // draw the floor once, we will not overwrite on this area in-game
     // black line
-    M5.Lcd.drawFastHLine(0, GAMEH, TFTW, TFT_BLACK);
+    StickCP2.Display.drawFastHLine(0, GAMEH, TFTW, TFT_BLACK);
     // grass and stripe
-    M5.Lcd.fillRect(0, GAMEH + 1, TFTW2, GRASSH, GRASSCOL);
-    M5.Lcd.fillRect(TFTW2, GAMEH + 1, TFTW2, GRASSH, GRASSCOL2);
+    StickCP2.Display.fillRect(0, GAMEH + 1, TFTW2, GRASSH, GRASSCOL);
+    StickCP2.Display.fillRect(TFTW2, GAMEH + 1, TFTW2, GRASSH, GRASSCOL2);
     // black line
-    M5.Lcd.drawFastHLine(0, GAMEH + GRASSH, TFTW, TFT_BLACK);
+    StickCP2.Display.drawFastHLine(0, GAMEH + GRASSH, TFTW, TFT_BLACK);
     // mud
-    M5.Lcd.fillRect(0, GAMEH + GRASSH + 1, TFTW, FLOORH - GRASSH, FLOORCOL);
+    StickCP2.Display.fillRect(0, GAMEH + GRASSH + 1, TFTW, FLOORH - GRASSH, FLOORCOL);
     // grass x position (for stripe animation)
     long grassx = TFTW;
     // game loop time variables
@@ -125,8 +126,9 @@ void game_loop() {
 
     while (1) {
         loops = 0;
+        StickCP2.update();
         while (millis() > next_game_tick && loops < MAX_FRAMESKIP) {
-            if (digitalRead(M5_BUTTON_HOME) == LOW) {
+            if (StickCP2.BtnA.isPressed()) {
                 // while(digitalRead(M5_BUTTON_HOME) == LOW);
                 if (bird.y > BIRDH2 * 0.5) bird.vel_y = -JUMP_FORCE;
                 // else zero velocity
@@ -172,13 +174,13 @@ void game_loop() {
 
         if (pipes.x >= 0 && pipes.x < TFTW) {
             // pipe color
-            M5.Lcd.drawFastVLine(pipes.x + 3, 0, pipes.gap_y, PIPECOL);
-            M5.Lcd.drawFastVLine(pipes.x + 3, pipes.gap_y + GAPHEIGHT + 1,
+            StickCP2.Display.drawFastVLine(pipes.x + 3, 0, pipes.gap_y, PIPECOL);
+            StickCP2.Display.drawFastVLine(pipes.x + 3, pipes.gap_y + GAPHEIGHT + 1,
                                  GAMEH - (pipes.gap_y + GAPHEIGHT + 1),
                                  PIPECOL);
             // highlight
-            M5.Lcd.drawFastVLine(pipes.x, 0, pipes.gap_y, PIPEHIGHCOL);
-            M5.Lcd.drawFastVLine(pipes.x, pipes.gap_y + GAPHEIGHT + 1,
+            StickCP2.Display.drawFastVLine(pipes.x, 0, pipes.gap_y, PIPEHIGHCOL);
+            StickCP2.Display.drawFastVLine(pipes.x, pipes.gap_y + GAPHEIGHT + 1,
                                  GAMEH - (pipes.gap_y + GAPHEIGHT + 1),
                                  PIPEHIGHCOL);
             // bottom and top border of pipe
@@ -193,8 +195,8 @@ void game_loop() {
 #if 1
         // erase behind pipe
         if (pipes.x <= TFTW)
-            M5.Lcd.drawFastVLine(pipes.x + PIPEW, 0, GAMEH, BCKGRDCOL);
-            // M5.Lcd.drawFastVLine(pipes.x, 0, GAMEH, BCKGRDCOL);
+            StickCP2.Display.drawFastVLine(pipes.x + PIPEW, 0, GAMEH, BCKGRDCOL);
+            // StickCP2.Display.drawFastVLine(pipes.x, 0, GAMEH, BCKGRDCOL);
             // PIPECOL
 #endif
         // bird
@@ -223,8 +225,8 @@ void game_loop() {
         // ---------------
         grassx -= SPEED;
         if (grassx < 0) grassx = TFTW;
-        M5.Lcd.drawFastVLine(grassx % TFTW, GAMEH + 1, GRASSH - 1, GRASSCOL);
-        M5.Lcd.drawFastVLine((grassx + 64) % TFTW, GAMEH + 1, GRASSH - 1,
+        StickCP2.Display.drawFastVLine(grassx % TFTW, GAMEH + 1, GRASSH - 1, GRASSCOL);
+        StickCP2.Display.drawFastVLine((grassx + 64) % TFTW, GAMEH + 1, GRASSH - 1,
                              GRASSCOL2);
 
         // ===============
@@ -246,19 +248,19 @@ void game_loop() {
         else if (bird.x > pipes.x + PIPEW - BIRDW && passed_pipe) {
             passed_pipe = false;
             // erase score with background color
-            M5.Lcd.setTextColor(BCKGRDCOL);
-            M5.Lcd.setCursor(TFTW2, 4);
-            M5.Lcd.print(score);
+            StickCP2.Display.setTextColor(BCKGRDCOL);
+            StickCP2.Display.setCursor(TFTW2, 4);
+            StickCP2.Display.print(score);
             // set text color back to white for new score
-            M5.Lcd.setTextColor(TFT_WHITE);
+            StickCP2.Display.setTextColor(TFT_WHITE);
             // increase score since we successfully passed a pipe
             score++;
         }
 
         // update score
         // ---------------
-        M5.Lcd.setCursor(2, 4);
-        M5.Lcd.print(score);
+        StickCP2.Display.setCursor(2, 4);
+        StickCP2.Display.print(score);
     }
 
     // add a small delay to show how the player lost
@@ -267,7 +269,7 @@ void game_loop() {
 
 void game_init() {
     // clear screen
-    M5.Lcd.fillScreen(BCKGRDCOL);
+    StickCP2.Display.fillScreen(BCKGRDCOL);
     // reset score
     score = 0;
     // init bird
@@ -286,27 +288,26 @@ void game_init() {
 // game start
 // ---------------
 void game_start() {
-    M5.Lcd.fillScreen(TFT_BLACK);
-    M5.Lcd.fillRect(0, TFTH2 - 10, TFTW, 1, TFT_WHITE);
-    M5.Lcd.fillRect(0, TFTH2 + 15, TFTW, 1, TFT_WHITE);
-    M5.Lcd.setTextColor(TFT_WHITE);
-    M5.Lcd.setTextSize(1);
+    StickCP2.Display.fillScreen(TFT_BLACK);
+    StickCP2.Display.fillRect(0, TFTH2 - 10, TFTW, 1, TFT_WHITE);
+    StickCP2.Display.fillRect(0, TFTH2 + 15, TFTW, 1, TFT_WHITE);
+    StickCP2.Display.setTextColor(TFT_WHITE);
+    StickCP2.Display.setTextSize(1);
     // half width - num char * char width in pixels
-    M5.Lcd.setCursor(TFTW2 - 15, TFTH2 - 6);
-    M5.Lcd.println("FLAPPY");
-    M5.Lcd.setTextSize(1);
-    M5.Lcd.setCursor(TFTW2 - 15, TFTH2 + 6);
-    M5.Lcd.println("-BIRD-");
-    M5.Lcd.setTextSize(1);
-    M5.Lcd.setCursor(15, TFTH2 - 21);
-    M5.Lcd.println("M5StickC");
-    M5.Lcd.setCursor(TFTW2 - 40, TFTH2 + 21);
-    M5.Lcd.println("please press home");
+    StickCP2.Display.setCursor(TFTW2 - 15, TFTH2 - 6);
+    StickCP2.Display.println("FLAPPY");
+    StickCP2.Display.setTextSize(1);
+    StickCP2.Display.setCursor(TFTW2 - 15, TFTH2 + 6);
+    StickCP2.Display.println("-BIRD-");
+    StickCP2.Display.setTextSize(1);
+    StickCP2.Display.setCursor(15, TFTH2 - 21);
+    StickCP2.Display.println("M5StickC");
+    StickCP2.Display.setCursor(TFTW2 - 40, TFTH2 + 21);
+    StickCP2.Display.println("please press home");
     while (1) {
         // wait for push button
-        if (digitalRead(M5_BUTTON_HOME) == LOW) {
-            while (digitalRead(M5_BUTTON_HOME) == LOW)
-                ;
+        StickCP2.update();
+        if (StickCP2.BtnA.wasPressed()) {
             break;
         }
     }
@@ -318,38 +319,37 @@ void game_start() {
 // game over
 // ---------------
 void game_over() {
-    M5.Lcd.fillScreen(TFT_BLACK);
+    StickCP2.Display.fillScreen(TFT_BLACK);
     maxScore = EEPROM.readInt(address);
 
     if (score > maxScore) {
         EEPROM.writeInt(address, score);
         EEPROM.commit();
         maxScore = score;
-        M5.Lcd.setTextColor(TFT_RED);
-        M5.Lcd.setTextSize(1);
-        M5.Lcd.setCursor(0, TFTH2 - 16);
-        M5.Lcd.println("NEW HIGHSCORE");
+        StickCP2.Display.setTextColor(TFT_RED);
+        StickCP2.Display.setTextSize(1);
+        StickCP2.Display.setCursor(0, TFTH2 - 16);
+        StickCP2.Display.println("NEW HIGHSCORE");
     }
 
-    M5.Lcd.setTextColor(TFT_WHITE);
-    M5.Lcd.setTextSize(1);
+    StickCP2.Display.setTextColor(TFT_WHITE);
+    StickCP2.Display.setTextSize(1);
     // half width - num char * char width in pixels
-    M5.Lcd.setCursor(TFTW2 - 25, TFTH2 - 6);
-    M5.Lcd.println("GAME OVER");
-    M5.Lcd.setTextSize(1);
-    M5.Lcd.setCursor(1, 10);
-    M5.Lcd.print("score: ");
-    M5.Lcd.print(score);
-    M5.Lcd.setCursor(5, TFTH2 + 6);
-    M5.Lcd.println("press button");
-    M5.Lcd.setCursor(1, 21);
-    M5.Lcd.print("Max Score:");
-    M5.Lcd.print(maxScore);
+    StickCP2.Display.setCursor(TFTW2 - 25, TFTH2 - 6);
+    StickCP2.Display.println("GAME OVER");
+    StickCP2.Display.setTextSize(1);
+    StickCP2.Display.setCursor(1, 10);
+    StickCP2.Display.print("score: ");
+    StickCP2.Display.print(score);
+    StickCP2.Display.setCursor(5, TFTH2 + 6);
+    StickCP2.Display.println("press button");
+    StickCP2.Display.setCursor(1, 21);
+    StickCP2.Display.print("Max Score:");
+    StickCP2.Display.print(maxScore);
     while (1) {
         // wait for push button
-        if (digitalRead(M5_BUTTON_HOME) == LOW) {
-            while (digitalRead(M5_BUTTON_HOME) == LOW)
-                ;
+        StickCP2.update();
+        if (StickCP2.BtnA.wasPressed()) {
             break;
         }
     }
@@ -362,9 +362,9 @@ void resetMaxScore() {
 
 void setup() {
     // put your setup code here, to run once:
-    M5.begin();
+    auto cfg = M5.config();
+    StickCP2.begin(cfg);
     EEPROM.begin(1000);
-    pinMode(M5_BUTTON_HOME, INPUT);
     // resetMaxScore();
     Serial.println("last score:");
     Serial.println(EEPROM.readInt(address));
